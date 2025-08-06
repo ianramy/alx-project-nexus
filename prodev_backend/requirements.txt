@@ -1,0 +1,13 @@
+# requirements.txt
+
+django
+django-filter
+djangorestframework 
+djangorestframework-simplejwt 
+psycopg2-binary
+django-environ 
+drf-spectacular 
+celery 
+redis 
+channels
+markdown
