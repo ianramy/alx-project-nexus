@@ -1,6 +1,7 @@
 # server/apps/location/views.py
 
 from rest_framework import viewsets, permissions
+from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from drf_spectacular.utils import (
     extend_schema,
     extend_schema_view,
@@ -15,6 +16,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
     Base ModelViewSet.
     """
     permission_classes = [permissions.AllowAny]
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
 
 
 # -------------------- Continents --------------------
@@ -72,6 +74,7 @@ class ContinentViewSet(BaseModelViewSet):
     """
     queryset = Continent.objects.all().order_by("name")
     serializer_class = ContinentSerializer
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
 
 
 # -------------------- Countries --------------------
@@ -129,6 +132,7 @@ class CountryViewSet(BaseModelViewSet):
     """
     queryset = Country.objects.select_related("continent").all().order_by("name")
     serializer_class = CountrySerializer
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
 
 
 # -------------------- Cities --------------------
@@ -186,3 +190,4 @@ class CityViewSet(BaseModelViewSet):
     """
     queryset = City.objects.select_related("country", "country__continent").all().order_by("name")
     serializer_class = CitySerializer
+    parser_classes = [JSONParser, FormParser, MultiPartParser]

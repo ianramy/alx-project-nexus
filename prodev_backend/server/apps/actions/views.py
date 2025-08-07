@@ -1,8 +1,9 @@
 # server/apps/actions/views.py
 
 from rest_framework import viewsets, permissions
+from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from .models import EcoAction
-from .serializers import EcoActionSerializer
+from .serializers import EcoActionSerializer, EcoActionCreateSerializer
 from drf_spectacular.utils import (
     extend_schema,
     extend_schema_view,
@@ -34,13 +35,13 @@ from drf_spectacular.utils import (
     create=extend_schema(
         tags=["Actions"],
         summary="Create an action",
-        request={"application/x-www-form-urlencoded": EcoActionSerializer},
+        request={"application/x-www-form-urlencoded": EcoActionCreateSerializer},
         responses={201: EcoActionSerializer},
     ),
     update=extend_schema(
         tags=["Actions"],
         summary="Update an action",
-        request={"application/x-www-form-urlencoded": EcoActionSerializer},
+        request={"application/x-www-form-urlencoded": EcoActionCreateSerializer},
         responses={200: EcoActionSerializer},
     ),
     destroy=extend_schema(
@@ -52,6 +53,11 @@ from drf_spectacular.utils import (
 
 
 class EcoActionViewSet(viewsets.ModelViewSet):
-    serializer_class = EcoActionSerializer
     permission_classes = [permissions.AllowAny]
     queryset = EcoAction.objects.all()
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return EcoActionCreateSerializer
+        return EcoActionSerializer

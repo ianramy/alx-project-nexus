@@ -1,8 +1,9 @@
 # server/apps/leaderboard/views.py
 
 from rest_framework import viewsets, permissions
+from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from .models import LeaderboardEntry
-from .serializers import LeaderboardEntrySerializer
+from .serializers import LeaderboardEntrySerializer, LeaderboardCreateSerializer, LeaderboardUpdateSerializer
 from drf_spectacular.utils import (
     extend_schema,
     extend_schema_view,
@@ -34,13 +35,13 @@ from drf_spectacular.utils import (
     create=extend_schema(
         tags=["Leaderboards"],
         summary="Create a leaderboard",
-        request={"application/x-www-form-urlencoded": LeaderboardEntrySerializer},
+        request={"application/x-www-form-urlencoded": LeaderboardCreateSerializer},
         responses={201: LeaderboardEntrySerializer},
     ),
     update=extend_schema(
         tags=["Leaderboards"],
         summary="Update a leaderboard",
-        request={"application/x-www-form-urlencoded": LeaderboardEntrySerializer},
+        request={"application/x-www-form-urlencoded": LeaderboardUpdateSerializer},
         responses={200: LeaderboardEntrySerializer},
     ),
     destroy=extend_schema(
@@ -58,3 +59,4 @@ class LeaderboardViewSet(viewsets.ModelViewSet):
     queryset = LeaderboardEntry.objects.all()
     serializer_class = LeaderboardEntrySerializer
     permission_classes = [permissions.AllowAny]
+    parser_classes = [JSONParser, FormParser, MultiPartParser]

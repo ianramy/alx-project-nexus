@@ -46,6 +46,47 @@ class UserSerializer(serializers.ModelSerializer):
     )
     city_detail = CityMinimalSerializer(source="city", read_only=True)
 
+    class Meta:
+        model = CustomUser
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "avatar",
+            "bio",
+            "phone_number",
+            "date_of_birth",
+            "gender",
+            "profile_complete",
+            "city",
+            "city_detail",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at", "city_detail"]
+        extra_kwargs = {
+            "username": {"required": True},
+            "email": {"required": True},
+        }
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating/updating CustomUser instances.
+    Includes password write logic and city input.
+    """
+    avatar = serializers.URLField(required=False, allow_null=True)
+    bio = serializers.CharField(required=False, allow_null=True)
+
+    city = serializers.PrimaryKeyRelatedField(
+        queryset=City.objects.all(),
+        required=False,
+        allow_null=True,
+        help_text="Primary key of the City (from /api/location/cities/).",
+    )
+
     # Password handling
     password = serializers.CharField(
         write_only=True,
@@ -69,12 +110,9 @@ class UserSerializer(serializers.ModelSerializer):
             "gender",
             "profile_complete",
             "city",
-            "city_detail",
-            "created_at",
-            "updated_at",
             "password",
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "city_detail"]
+        read_only_fields = ["id"]
         extra_kwargs = {
             "username": {"required": True},
             "email": {"required": True},

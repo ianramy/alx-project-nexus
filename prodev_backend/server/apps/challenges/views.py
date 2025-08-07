@@ -1,8 +1,9 @@
 # server/apps/challenges/views.py
 
 from rest_framework import viewsets, permissions
+from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
 from .models import Challenge
-from .serializers import ChallengeSerializer
+from .serializers import ChallengeSerializer, ChallengeCreateSerializer
 from drf_spectacular.utils import (
     extend_schema,
     extend_schema_view,
@@ -34,13 +35,13 @@ from drf_spectacular.utils import (
     create=extend_schema(
         tags=["Challenges"],
         summary="Create a challenge",
-        request={"application/x-www-form-urlencoded": ChallengeSerializer},
+        request={"application/x-www-form-urlencoded": ChallengeCreateSerializer,},
         responses={201: ChallengeSerializer},
     ),
     update=extend_schema(
         tags=["Challenges"],
         summary="Update a challenge",
-        request={"application/x-www-form-urlencoded": ChallengeSerializer},
+        request={"application/x-www-form-urlencoded": ChallengeCreateSerializer,},
         responses={200: ChallengeSerializer},
     ),
     destroy=extend_schema(
@@ -55,3 +56,4 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     queryset = Challenge.objects.all()
     serializer_class = ChallengeSerializer
     permission_classes = [permissions.AllowAny]
+    parser_classes = [FormParser, MultiPartParser, JSONParser]
