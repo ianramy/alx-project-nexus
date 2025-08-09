@@ -1,0 +1,36 @@
+/* src/styles/global.css */
+
+@import "tailwindcss";
+
+:root {
+    --color-brand-primary: #4f46e5;
+    --color-brand-secondary: #7c3aed;
+    --color-brand-accent: #22c55e;
+
+    --text-muted: #6b7280;
+    --text-subtle: #9ca3af;
+    --bg-light: #f9fafb;
+
+    --radius-xl: 1rem;
+    --shadow-xl: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+    --status-pending-bg: #fef3c7;
+    --status-pending-text: #92400e;
+    --status-confirmed-bg: #d1fae5;
+    --status-confirmed-text: #065f46;
+    --status-cancelled-bg: #fee2e2;
+    --status-cancelled-text: #991b1b;
+}
+
+.glow-button {
+    position: relative;
+    border: none;
+}
+
+.clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
