@@ -12,3 +12,4 @@ celery
 redis 
 channels
 markdown
+python-decouple
