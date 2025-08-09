@@ -1,3 +1,3 @@
 import os
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings.dev')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings.prod')
