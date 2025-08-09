@@ -1,6 +1,6 @@
 # server/apps/actions/views.py
 
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from .models import EcoAction
 from .serializers import EcoActionSerializer, EcoActionCreateSerializer
@@ -9,6 +9,7 @@ from drf_spectacular.utils import (
     extend_schema_view,
     OpenApiParameter
 )
+from rest_framework.response import Response
 
 
 @extend_schema_view(
@@ -61,3 +62,20 @@ class EcoActionViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update']:
             return EcoActionCreateSerializer
         return EcoActionSerializer
+
+    def create(self, request, *args, **kwargs):
+        create_serializer = self.get_serializer(data=request.data)
+        create_serializer.is_valid(raise_exception=True)
+        self.perform_create(create_serializer)
+        # Use detailed serializer for response
+        full_serializer = EcoActionSerializer(create_serializer.instance, context=self.get_serializer_context())
+        return Response(full_serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        update_serializer = self.get_serializer(instance, data=request.data, partial=kwargs.get('partial', False))
+        update_serializer.is_valid(raise_exception=True)
+        self.perform_update(update_serializer)
+        # Use detailed serializer for response
+        full_serializer = EcoActionSerializer(update_serializer.instance, context=self.get_serializer_context())
+        return Response(full_serializer.data)
