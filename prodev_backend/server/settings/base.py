@@ -177,6 +177,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:8000",
     "http://192.168.100.6:3000",
+    "https://carbonjar.vercel.app",
+    "https://carbonjar.onrender.com",
 ]
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
