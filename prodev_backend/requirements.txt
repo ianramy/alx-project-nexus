@@ -1,6 +1,7 @@
 # requirements.txt
 
 django
+django-cors-headers
 django-filter
 djangorestframework 
 djangorestframework-simplejwt 
