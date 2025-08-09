@@ -18,7 +18,7 @@ export default function UsersPage() {
 			<h1 className="text-2xl font-bold mb-4">Users</h1>
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{users.map((user) => (
-					<UserAvatar key={user.id} user={user} />
+					<UserAvatar key={user.id} username={user.username} />
 				))}
 			</div>
 		</div>

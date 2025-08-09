@@ -13,6 +13,7 @@ import {
 import Logout from "@/components/auth/Logout";
 import BackButton from "@/components/common/BackButton";
 import { useRouter } from "next/router";
+import Image from "next/image";
 
 
 
@@ -80,7 +81,7 @@ export default function ProfilePage() {
                 <div className="bg-white rounded-xl shadow-md p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                     <div className="flex items-center gap-4">
                         {user?.avatar ? (
-                            <img
+                            <Image
                                 src={user.avatar}
                                 alt="Avatar"
                                 className="w-16 h-16 rounded-full object-cover border-2 border-green-500"

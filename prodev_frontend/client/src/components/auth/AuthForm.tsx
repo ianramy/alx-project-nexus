@@ -60,8 +60,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
             }
 
             router.push("/profile");
-        } catch (err: any) {
-            setError(err?.message ?? "Something went wrong. Please try again.");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }

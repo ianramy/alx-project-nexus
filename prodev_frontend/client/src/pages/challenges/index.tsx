@@ -53,7 +53,7 @@ export default function ChallengesPage() {
             lt3: [], lt7: [], lt30: [], expired: []
         };
         for (const ch of challenges) {
-            const d = daysUntil((ch as any)?.end_date);
+            const d = daysUntil(ch?.end_date);
             const enriched = { ...ch, __days: d };
             const bucket = BUCKETS.find(b => b.predicate(d));
             if (bucket) byBucket[bucket.key].push(enriched);
@@ -199,7 +199,7 @@ function Row({
 
                 {!loading && items.map((challenge) => (
                     <div
-                        key={(challenge as any).id ?? challenge.title}
+                        key={challenge?.id ?? challenge.title}
                         role="listitem"
                         className={`
 							flex-shrink-0 w-[22rem] snap-center
@@ -207,14 +207,14 @@ function Row({
 						`}
                     >
                         <Link
-                            href={`/challenges/${(challenge as any).id}`}
+                            href={`/challenges/${(challenge).id}`}
                             className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-2xl"
                         >
                             {/* Uniform height wrapper so long text doesn’t change card size */}
                             <div className="h-56 p-6">
                                 <ChallengeCard
                                     title={challenge.title}
-                                    end_date={challenge.end_date as any}
+                                    end_date={challenge.end_date}
                                 />
                             </div>
                         </Link>

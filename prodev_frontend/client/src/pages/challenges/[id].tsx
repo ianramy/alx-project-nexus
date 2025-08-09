@@ -70,8 +70,8 @@ export default function ChallengeDetailPage() {
     const handleShare = async () => {
         try {
             const url = typeof window !== "undefined" ? window.location.href : "";
-            if ((navigator as any).share) {
-                await (navigator as any).share({ title: challenge?.title, text: challenge?.description, url });
+            if (typeof navigator.share === "function") {
+                await (navigator).share({ title: challenge?.title, text: challenge?.description, url });
             } else if (navigator.clipboard) {
                 await navigator.clipboard.writeText(url);
                 alert("Link copied to clipboard");
@@ -230,7 +230,7 @@ export default function ChallengeDetailPage() {
                                                 <li key={user.id} className="flex items-center gap-3 rounded-xl bg-white/70 dark:bg-slate-800/70 ring-1 ring-black/5 px-3 py-2">
                                                     {user.avatar ? (
                                                         /* If you allow remote avatars, consider Next <Image> with domain config */
-                                                        <img
+                                                        <Image
                                                             src={user.avatar}
                                                             alt={user.username}
                                                             className="h-10 w-10 rounded-full object-cover"

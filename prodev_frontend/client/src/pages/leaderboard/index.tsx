@@ -36,7 +36,7 @@ export default function LeaderboardPage() {
 
     // max score for relative bar
     const maxScore = useMemo(
-        () => Math.max(1, ...entries.map(e => Number((e as any)?.score) || 0)),
+        () => Math.max(1, ...entries.map(e => Number(e?.score) || 0)),
         [entries]
     );
 
@@ -151,22 +151,21 @@ export default function LeaderboardPage() {
                         {!loading && windowed.map((entry, i) => {
                             // --- FIX: pick display fields safely ---
                             const userName =
-                                (entry as any)?.user?.username ??
-                                (entry as any)?.user?.name ??
-                                String((entry as any)?.user ?? "User");
+                                entry?.user?.username ??
+                                String(entry?.user ?? "User");
 
                             const challengeTitle =
-                                (entry as any)?.challenge?.title ??
-                                String((entry as any)?.challenge ?? "Challenge");
+                                entry?.challenge?.title ??
+                                String(entry?.challenge ?? "Challenge");
 
                             const rank = (entries.length <= visibleLimit ? 0 : startIndex) + i + 1;
-                            const score = Number((entry as any)?.score) || 0;
+                            const score = Number(entry?.score) || 0;
                             const percent = Math.min(100, Math.round((score / maxScore) * 100));
                             const delay = Math.min(160, i * 40);
 
                             return (
                                 <div
-                                    key={(entry as any)?.id ?? `${userName}-${rank}`}
+                                    key={entry?.id ?? `${userName}-${rank}`}
                                     style={{ animationDelay: `${delay}ms` }}
                                     className={dir === "forward" ? "animate-slide-in-left" : "animate-slide-in-right"}
                                 >

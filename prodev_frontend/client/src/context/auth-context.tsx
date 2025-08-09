@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				if (!res.ok) throw new Error("Unauthorized");
 				const userData = await res.json();
 				setUser(userData);
-			} catch (err) {
+			} catch (_err) {
 				setAccessToken(null);
 				if (typeof window !== "undefined") {
 					localStorage.removeItem("access");

@@ -46,8 +46,8 @@ export default function ActionDetailPage() {
     const share = async () => {
         try {
             const url = typeof window !== "undefined" ? window.location.href : "";
-            if ((navigator as any).share) {
-                await (navigator as any).share({ title: action?.action_type, text: action?.description, url });
+            if (typeof (navigator).share === "function") {
+                await (navigator).share({ title: action?.action_type, text: action?.description, url });
             } else if (navigator.clipboard) {
                 await navigator.clipboard.writeText(url);
                 alert("Link copied to clipboard!");

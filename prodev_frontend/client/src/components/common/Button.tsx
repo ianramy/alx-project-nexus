@@ -39,21 +39,27 @@ export default function Button({
     onMouseMove,
     ...props
 }: ButtonProps) {
-    const ref = useRef<HTMLButtonElement | null>(null);
+    const btnRef = useRef<HTMLButtonElement | null>(null);
+    const aRef = useRef<HTMLAnchorElement | null>(null);
 
-    const handleMove: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-        const el = ref.current;
-        if (!el) return;
+    const setGlow = (el: HTMLElement, e: { clientX: number; clientY: number }) => {
         const rect = el.getBoundingClientRect();
         el.style.setProperty("--x", `${e.clientX - rect.left}px`);
         el.style.setProperty("--y", `${e.clientY - rect.top}px`);
+    };
+
+    const handleButtonMove: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+        if (btnRef.current) setGlow(btnRef.current, e);
         onMouseMove?.(e);
+    };
+
+    const handleAnchorMove: React.MouseEventHandler<HTMLAnchorElement> = (e) => {
+        if (aRef.current) setGlow(aRef.current, e);
     };
 
     const content = (
         <>
             <span className="relative z-10">{children}</span>
-            {/* cursor glow */}
             <span
                 aria-hidden
                 className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -76,14 +82,14 @@ export default function Button({
 
     if (href) {
         return (
-            <Link href={href} className={classes as any} onMouseMove={undefined}>
+            <Link href={href} className={classes} onMouseMove={handleAnchorMove} ref={aRef}>
                 {content}
             </Link>
         );
     }
 
     return (
-        <button ref={ref} className={classes} onMouseMove={handleMove} {...props}>
+        <button ref={btnRef} className={classes} onMouseMove={handleButtonMove} {...props}>
             {content}
         </button>
     );

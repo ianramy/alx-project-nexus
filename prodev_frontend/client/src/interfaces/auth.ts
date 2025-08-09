@@ -53,4 +53,4 @@ export interface LogoutRequest {
 	refresh: string;
 }
 
-export interface LogoutResponse {}
+export type LogoutResponse = Record<string, never>;
