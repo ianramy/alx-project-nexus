@@ -1,5 +1,9 @@
 # server/settings/prod.py
 
+from .base import *  # noqa
+
+DEBUG = True
+
 ALLOWED_HOSTS = ["carbonjar.onrender.com", "127.0.0.1", "localhost"]
 
 
