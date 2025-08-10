@@ -7,3 +7,7 @@ class ActionsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'server.apps.actions'
     label = "actions"
+
+def ready(self):
+    # Import signals so they register
+    from . import signals  # noqa

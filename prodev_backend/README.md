@@ -69,5 +69,6 @@ Visit:
 
 - Swagger/OpenAPI Docs → > `http://localhost:8000/`
 - Admin Panel → > `http://localhost:8000/admin`
-
+- ERD Diagram → > `https://dbdiagram.io/d/CarbonJar-ERD-Diagram-68920e8edd90d1786589d5e1`
+  
 ---

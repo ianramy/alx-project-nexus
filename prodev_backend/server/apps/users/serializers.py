@@ -6,6 +6,8 @@ User serializers for read/write operations.
 
 from rest_framework import serializers
 from .models import CustomUser
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from server.apps.location.models import City
 
 
@@ -15,8 +17,12 @@ class CityMinimalSerializer(serializers.ModelSerializer):
     """
     country_id = serializers.IntegerField(source="country.id", read_only=True)
     country_name = serializers.CharField(source="country.name", read_only=True)
-    continent_id = serializers.IntegerField(source="country.continent.id", read_only=True)
-    continent_name = serializers.CharField(source="country.continent.name", read_only=True)
+    continent_id = serializers.IntegerField(
+        source="country.continent.id", read_only=True
+    )
+    continent_name = serializers.CharField(
+        source="country.continent.name", read_only=True
+    )
 
     class Meta:
         model = City
@@ -33,10 +39,11 @@ class CityMinimalSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """
-    Serializer for CustomUser 
+    Read serializer for CustomUser.
     """
-    avatar = serializers.URLField(required=False, allow_null=True)
-    bio = serializers.CharField(required=False, allow_null=True)
+
+    avatar = serializers.URLField(required=False, allow_null=True, allow_blank=True)
+    bio = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     city = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.all(),
@@ -74,11 +81,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserCreateSerializer(serializers.ModelSerializer):
     """
-    Serializer for creating/updating CustomUser instances.
+    Write serializer for creating CustomUser instances.
     Includes password write logic and city input.
     """
-    avatar = serializers.URLField(required=False, allow_null=True)
-    bio = serializers.CharField(required=False, allow_null=True)
+
+    avatar = serializers.URLField(required=False, allow_null=True, allow_blank=True)
+    bio = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     city = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.all(),
@@ -155,6 +163,84 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
         if password:
             instance.set_password(password)
-
         instance.save()
         return instance
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=False, allow_blank=False, max_length=150)
+    email = serializers.EmailField(required=False)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    avatar = serializers.URLField(required=False, allow_blank=True, allow_null=True)
+    bio = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    gender = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    city = serializers.PrimaryKeyRelatedField(
+        queryset=City.objects.all(), required=False, allow_null=True
+    )
+
+    class Meta:
+        model = CustomUser
+        # Only include fields you WANT writable via /me/ (and PUT/PATCH on ViewSet).
+        fields = [
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "avatar",
+            "bio",
+            "phone_number",
+            "date_of_birth",
+            "gender",
+            "city",
+        ]
+
+    def update(self, instance, validated_data):
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+        instance.save()
+        return instance
+
+    def create(self, validated_data):
+        raise NotImplementedError("Use update only")
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """
+    POST /users/me/password/ payload.
+    """
+
+    current_password = serializers.CharField(write_only=True, trim_whitespace=False)
+    new_password = serializers.CharField(write_only=True, trim_whitespace=False)
+    re_new_password = serializers.CharField(write_only=True, trim_whitespace=False)
+
+    def validate_current_password(self, value):
+        user = self.context["user"]
+        if not user.check_password(value):
+            raise serializers.ValidationError("Current password is incorrect.")
+        return value
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["re_new_password"]:
+            raise serializers.ValidationError(
+                {"re_new_password": "Passwords do not match."}
+            )
+        # Run Django’s password validators
+        try:
+            validate_password(attrs["new_password"], self.context["user"])
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"new_password": list(e.messages)})
+        # Prevent no-op changes
+        if attrs["new_password"] == attrs["current_password"]:
+            raise serializers.ValidationError(
+                {"new_password": "New password must be different."}
+            )
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.context["user"]
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return user
