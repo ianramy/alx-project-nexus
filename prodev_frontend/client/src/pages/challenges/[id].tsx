@@ -4,11 +4,13 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
-import { fetchChallenges } from "@/utils/challenges";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { fetchChallenge, joinChallenge } from "@/utils/challenges";
 import { Challenge } from "@/interfaces/challenge";
 import BackButton from "@/components/common/BackButton";
+import { ApiError } from "@/utils/http";
 
+type ShareCapableNavigator = Navigator & { share?: (data: ShareData) => Promise<void> };
 
 function daysUntil(dateStr?: string | null): number | null {
     if (!dateStr) return null;
@@ -23,10 +25,47 @@ function formatDeadline(dateStr?: string | null): string {
     return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
+function getErrorDetail(err: unknown): string | null {
+    if (err instanceof ApiError) {
+        const data = err.data;
+        if (data && typeof data === "object" && "detail" in data) {
+            const val = (data as { detail?: unknown }).detail;
+            if (typeof val === "string") return val;
+        }
+    }
+    return null;
+}
+
+type ToastKind = "success" | "error" | "info";
+type ToastItem = { id: number; kind: ToastKind; message: string };
+
 export default function ChallengeDetailPage() {
     const router = useRouter();
     const [challenge, setChallenge] = useState<Challenge | null>(null);
     const [loading, setLoading] = useState(true);
+    const [joining, setJoining] = useState(false);
+
+    // tiny toast system
+    const [toasts, setToasts] = useState<ToastItem[]>([]);
+    const idRef = useRef(1);
+    const timersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+    const notify = useCallback((kind: ToastKind, message: string, ttl = 4200) => {
+        const id = idRef.current++;
+        setToasts(prev => [...prev, { id, kind, message }]);
+        timersRef.current[id] = setTimeout(() => {
+            setToasts(prev => prev.filter(t => t.id !== id));
+            delete timersRef.current[id];
+        }, ttl);
+    }, []);
+    const dismissToast = (id: number) => {
+        clearTimeout(timersRef.current[id]);
+        delete timersRef.current[id];
+        setToasts(prev => prev.filter(t => t.id !== id));
+    };
+    useEffect(() => () => {
+        Object.values(timersRef.current).forEach(clearTimeout);
+        timersRef.current = {};
+    }, []);
 
     const idNum = useMemo(() => {
         const raw = router.query.id;
@@ -39,15 +78,16 @@ export default function ChallengeDetailPage() {
         let mounted = true;
         (async () => {
             try {
-                const data = await fetchChallenges();
-                const found = data?.find((c) => Number(c.id) === idNum) ?? null;
+                const found = await fetchChallenge(idNum);
                 if (mounted) setChallenge(found);
+            } catch {
+                notify("error", "We couldn’t load this challenge.");
             } finally {
                 if (mounted) setLoading(false);
             }
         })();
         return () => { mounted = false; };
-    }, [router.isReady, idNum]);
+    }, [router.isReady, idNum, notify]);
 
     const dLeft = daysUntil(challenge?.end_date);
     const deadlineText =
@@ -64,17 +104,37 @@ export default function ChallengeDetailPage() {
                     dLeft < 7 ? "bg-yellow-100 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-200" :
                         "bg-emerald-100 text-emerald-800 ring-emerald-600/20 dark:bg-emerald-900/30 dark:text-emerald-200";
 
-    const handleJoin = () => {
-        alert("Join challenge clicked. Wire this to your API.");
+    const handleJoin = async () => {
+        if (!challenge || joining) return;
+        setJoining(true);
+        try {
+            const updated = await joinChallenge(challenge.id);
+            setChallenge(updated);
+            notify("success", "You joined the challenge! 🎉");
+        } catch (err: unknown) {
+            if (err instanceof ApiError && err.status === 401) {
+                notify("error", "Please log in to join. Redirecting…");
+                setTimeout(() => router.push("/login?next=" + encodeURIComponent(router.asPath)), 900);
+            } else if (err instanceof ApiError && err.status === 400) {
+                const msg = getErrorDetail(err) ?? "Couldn’t join this challenge.";
+                notify("error", msg);
+            } else {
+                notify("error", "Couldn’t join this challenge. Try again.");
+            }
+        } finally {
+            setJoining(false);
+        }
     };
+
     const handleShare = async () => {
         try {
             const url = typeof window !== "undefined" ? window.location.href : "";
-            if (typeof navigator.share === "function") {
-                await (navigator).share({ title: challenge?.title, text: challenge?.description, url });
+            const nav = (typeof navigator !== "undefined" ? (navigator as ShareCapableNavigator) : undefined);
+            if (nav?.share) {
+                await nav.share({ title: challenge?.title, text: challenge?.description, url });
             } else if (navigator.clipboard) {
                 await navigator.clipboard.writeText(url);
-                alert("Link copied to clipboard");
+                notify("info", "Link copied to clipboard ✨");
             }
         } catch { /* no-op */ }
     };
@@ -88,7 +148,7 @@ export default function ChallengeDetailPage() {
             {/* Background */}
             <div className="absolute inset-0 -z-20">
                 <Image
-                    src="/assets/images/challenge.jpg" /* reuse your team/green photo */
+                    src="/assets/images/challenge.jpg"
                     alt=""
                     fill
                     priority
@@ -97,11 +157,11 @@ export default function ChallengeDetailPage() {
                 />
             </div>
             <div
-                className={`
+                className="
 					absolute inset-0 -z-10
 					bg-[radial-gradient(120%_100%_at_50%_0%,rgba(0,0,0,0.35),rgba(0,0,0,0.7))]
 					backdrop-blur-[2px]
-				`}
+				"
             />
 
             {/* Header */}
@@ -116,7 +176,6 @@ export default function ChallengeDetailPage() {
             </header>
 
             <main className="mx-auto max-w-6xl px-6 py-8">
-                {/* Loading / Not found */}
                 {loading && (
                     <div className="mx-auto h-64 max-w-3xl rounded-3xl bg-white/20 animate-pulse ring-1 ring-white/10" />
                 )}
@@ -131,14 +190,13 @@ export default function ChallengeDetailPage() {
                     </div>
                 )}
 
-                {/* Content */}
                 {!loading && challenge && (
                     <section
-                        className={`
+                        className="
 							relative overflow-hidden rounded-3xl
 							bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl
 							ring-1 ring-black/5 shadow-[0_25px_60px_-25px_rgba(0,0,0,.6)]
-						`}
+						"
                     >
                         {/* Ambient accents */}
                         <div className="pointer-events-none absolute -top-24 -right-10 h-52 w-52 rounded-full bg-emerald-400/25 blur-3xl" />
@@ -149,11 +207,11 @@ export default function ChallengeDetailPage() {
                             {/* Title + status */}
                             <header className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                                 <div
-                                    className={`
+                                    className="
 										shrink-0 grid place-items-center h-10 w-10 sm:h-12 sm:w-12
-                                        rounded-2xl text-xl sm:text-2xl text-white
+										rounded-2xl text-xl sm:text-2xl text-white
 										bg-gradient-to-br from-emerald-500 to-green-600 ring-1 ring-white/25 shadow-md
-				                    `}
+									"
                                     aria-hidden
                                 >
                                     🏁
@@ -202,9 +260,10 @@ export default function ChallengeDetailPage() {
                                         <button
                                             type="button"
                                             onClick={handleJoin}
-                                            className="mt-5 lg:inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold px-4 py-2.5 transition"
+                                            disabled={joining}
+                                            className="mt-5 lg:inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold px-4 py-2.5 transition disabled:opacity-60"
                                         >
-                                            Join challenge
+                                            {joining ? "Joining..." : "Join challenge"}
                                         </button>
                                     </div>
                                 </aside>
@@ -217,7 +276,7 @@ export default function ChallengeDetailPage() {
                                 {(!challenge.participants || challenge.participants.length === 0) ? (
                                     <p className="mt-3 text-slate-300 sm:text-slate-400">No participants yet.</p>
                                 ) : (
-                                        <ul className="mt-4 grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                                    <ul className="mt-4 grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                                         {challenge.participants.map((user) => {
                                             const initials = (user?.username || "?")
                                                 .split(" ")
@@ -229,14 +288,16 @@ export default function ChallengeDetailPage() {
                                             return (
                                                 <li key={user.id} className="flex items-center gap-3 rounded-xl bg-white/70 dark:bg-slate-800/70 ring-1 ring-black/5 px-3 py-2">
                                                     {user.avatar ? (
-                                                        /* If you allow remote avatars, consider Next <Image> with domain config */
                                                         <Image
                                                             src={user.avatar}
                                                             alt={user.username}
-                                                            className="h-10 w-10 rounded-full object-cover"
+                                                            width={40}
+                                                            height={40}
+                                                            unoptimized
+                                                            className="rounded-full object-cover"
                                                         />
                                                     ) : (
-                                                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white grid place-items-center font-semibold">
+                                                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white grid place-items-center font-semibold">
                                                             {initials}
                                                         </div>
                                                     )}
@@ -254,6 +315,50 @@ export default function ChallengeDetailPage() {
                     </section>
                 )}
             </main>
+
+            <ToastStack toasts={toasts} onDismiss={dismissToast} />
+        </div>
+    );
+}
+
+/* Toast UI (inline, no libs) */
+function ToastStack({
+    toasts,
+    onDismiss,
+}: {
+    toasts: { id: number; kind: "success" | "error" | "info"; message: string }[];
+    onDismiss: (id: number) => void;
+}) {
+    return (
+        <div className="pointer-events-none fixed top-4 right-4 z-[100] flex flex-col gap-2" aria-live="polite" aria-atomic="false">
+            {toasts.map(t => (
+                <div
+                    key={t.id}
+                    className={`
+						pointer-events-auto w-80 max-w-[90vw] rounded-xl px-4 py-3 shadow-lg ring-1
+						${t.kind === "success" ? "bg-emerald-600/95 ring-emerald-400/30 text-white" : ""}
+						${t.kind === "error" ? "bg-rose-600/95 ring-rose-400/30 text-white" : ""}
+						${t.kind === "info" ? "bg-slate-800/90 ring-white/10 text-white" : ""}
+						backdrop-blur-md
+					`}
+                    role="status"
+                >
+                    <div className="flex items-start gap-3">
+                        <span className="text-lg leading-none" aria-hidden>
+                            {t.kind === "success" ? "✅" : t.kind === "error" ? "⚠️" : "🔔"}
+                        </span>
+                        <p className="text-sm leading-snug flex-1">{t.message}</p>
+                        <button
+                            onClick={() => onDismiss(t.id)}
+                            className="ml-1 rounded-md px-2 py-1 text-xs bg-white/10 hover:bg-white/20 transition"
+                            type="button"
+                            aria-label="Dismiss notification"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }

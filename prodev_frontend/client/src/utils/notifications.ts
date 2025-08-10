@@ -13,7 +13,6 @@ export const fetchNotifications = async (): Promise<Notification[]> => {
 		}
 
 		const data: Notification[] = await res.json();
-		console.log("Data fetched:", data);
 		return data;
 	} catch (err: unknown) {
 		if (err instanceof Error) {

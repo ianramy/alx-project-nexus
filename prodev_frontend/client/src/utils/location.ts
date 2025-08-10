@@ -13,7 +13,6 @@ export const fetchCities = async (): Promise<City[]> => {
 		}
 
 		const data: City[] = await res.json();
-		console.log("Data fetched:", data);
 		return data;
 	} catch (err: unknown) {
 		if (err instanceof Error) {

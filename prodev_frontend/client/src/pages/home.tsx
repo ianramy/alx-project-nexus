@@ -1,7 +1,18 @@
 // src/pages/home.tsx
+
 import Link from "next/link";
+import Image from "next/image";
+import { useAuth } from "@/context/auth-context";
 
 export default function HomePage() {
+    const { user } = useAuth() as {
+        user: {
+            username?: string;
+            avatar?: string | null;
+        } | null;
+    };
+
+    const initial = (user?.username?.[0] ?? "U").toUpperCase();
 
     return (
         <main className="relative min-h-screen text-gray-900 dark:text-white">
@@ -21,6 +32,29 @@ export default function HomePage() {
                 <div className="font-semibold tracking-tight text-lg">
                     <span className="text-green-600 dark:text-green-400">Carbon</span>Jar
                 </div>
+
+                {/* Avatar → /profile */}
+                <div>
+                    <Link href="/profile" className="group inline-flex items-center" aria-label="Open profile">
+                        {user?.avatar ? (
+                            <Image
+                                src={user.avatar}
+                                alt={`${user.username ?? "User"} avatar`}
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 rounded-full object-cover ring-2 ring-white/50 dark:ring-black/40 group-hover:ring-green-400 transition"
+                            />
+                        ) : (
+                            <div
+                                className="h-10 w-10 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold ring-2 ring-white/50 dark:ring-black/40 group-hover:ring-green-400 transition"
+                                aria-hidden="true"
+                                title="Profile"
+                            >
+                                {initial}
+                            </div>
+                        )}
+                    </Link>
+                </div>
             </header>
 
             {/* Hero */}
@@ -28,12 +62,11 @@ export default function HomePage() {
                 <div className="mx-auto max-w-3xl text-center">
                     <h1 className="text-4xl md:text-6xl font-extrabold drop-shadow-sm">
                         <span className="hidden dark:inline">
-                            Welcome to <span 
-                            className="text-green-700 dark:text-green-400">Carbon</span>Jar
+                            Welcome to <span className="text-green-700 dark:text-green-400">Carbon</span>Jar
                         </span>
                     </h1>
                     <h2>
-                    <span className="text-white">Track your carbon footprint.</span>
+                        <span className="text-white">Track your carbon footprint.</span>
                     </h2>
                 </div>
             </section>
@@ -42,29 +75,20 @@ export default function HomePage() {
             <section className="px-6 pb-14 md:pb-24">
                 <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div className="rounded-xl p-5 bg-white/80 dark:bg-white/10 border border-black/10 dark:border-white/10 backdrop-blur-md">
-                        <Link
-                            href="/actions"
-                            className="text-sm mt-1 text-gray-700 dark:text-gray-300"
-                        >
-                        <h3 className="font-semibold text-lg">Act</h3>
-                                Log daily eco-actions and view your evolving footprint.
+                        <Link href="/actions" className="text-sm mt-1 text-gray-700 dark:text-gray-300">
+                            <h3 className="font-semibold text-lg">Act</h3>
+                            Log daily eco-actions and view your evolving footprint.
                         </Link>
                     </div>
                     <div className="rounded-xl p-5 bg-white/80 dark:bg-white/10 border border-black/10 dark:border-white/10 backdrop-blur-md">
-                        <Link
-                            href="/challenges"
-                            className="text-sm mt-1 text-gray-700 dark:text-gray-300"
-                        >
-                        <h3 className="font-semibold text-lg">Compete</h3>
+                        <Link href="/challenges" className="text-sm mt-1 text-gray-700 dark:text-gray-300">
+                            <h3 className="font-semibold text-lg">Compete</h3>
                             Join community challenges and climb the ranks.
                         </Link>
                     </div>
                     <div className="rounded-xl p-5 bg-white/80 dark:bg-white/10 border border-black/10 dark:border-white/10 backdrop-blur-md">
-                        <Link
-                            href="/leaderboard"
-                            className="text-sm mt-1 text-gray-700 dark:text-gray-300"
-                        >
-                        <h3 className="font-semibold text-lg">Improve</h3>
+                        <Link href="/leaderboard" className="text-sm mt-1 text-gray-700 dark:text-gray-300">
+                            <h3 className="font-semibold text-lg">Improve</h3>
                             Discover tips tailored to your progress and goals.
                         </Link>
                     </div>

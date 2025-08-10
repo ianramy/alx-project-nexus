@@ -2,25 +2,32 @@
 
 import API_BASE_URL from "./api";
 import { Challenge } from "@/interfaces/challenge";
+import { smartFetch } from "./http";
 
+
+const url = (path: string) => {
+	const base = (API_BASE_URL || "").replace(/\/+$/, "");
+	const suffix = path.replace(/^\/+/, "");
+	return `${base}/${suffix}`;
+};
 
 export const fetchChallenges = async (): Promise<Challenge[]> => {
-	try {
-		const res = await fetch(`${API_BASE_URL}/challenges`);
+	return smartFetch<Challenge[]>(url("challenges/"));
+};
 
-		if (!res.ok) {
-			throw new Error(`HTTP error! status: ${res.status}`);
-		}
+export const fetchChallenge = async (id: number): Promise<Challenge> => {
+	return smartFetch<Challenge>(url(`challenges/${id}/`));
+};
 
-		const data: Challenge[] = await res.json();
-		console.log("Data fetched:", data);
-		return data;
-	} catch (err: unknown) {
-		if (err instanceof Error) {
-			console.error("API Error:", err.message);
-		} else {
-			console.error("Unknown error:", err);
-		}
-		throw err;
-	}
+export const joinChallenge = async (id: number): Promise<Challenge> => {
+    
+	return smartFetch<Challenge>(url(`challenges/${id}/join/`), {
+		method: "POST",
+	});
+};
+
+export const leaveChallenge = async (id: number): Promise<void> => {
+	await smartFetch<void>(url(`challenges/${id}/leave/`), {
+		method: "POST",
+	});
 };

@@ -12,7 +12,6 @@ export const fetchUsers = async (): Promise<User[]> => {
 		}
 
 		const data: User[] = await res.json();
-		console.log("Data fetched:", data);
 		return data;
 	} catch (err: unknown) {
 		if (err instanceof Error) {

@@ -13,7 +13,6 @@ export const fetchLeaderboard = async (): Promise<Leaderboard[]> => {
 		}
 
 		const data: Leaderboard[] = await res.json();
-		console.log("Data fetched:", data);
 		return data;
 	} catch (err: unknown) {
 		if (err instanceof Error) {

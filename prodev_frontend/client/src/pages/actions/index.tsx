@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { fetchActions } from "@/utils/actions";
+import { fetchActionTemplates } from "@/utils/actions";
 import { Action } from "@/interfaces/action";
 import { ActionCard } from "@/components/action/ActionCard";
 import BackButton from "@/components/common/BackButton";
@@ -29,7 +29,7 @@ export default function ActionsPage() {
         let mounted = true;
         (async () => {
             try {
-                const data = await fetchActions();
+                const data = await fetchActionTemplates(); // ⬅️ public catalog
                 if (mounted) setActions(data ?? []);
             } catch {
                 if (mounted) setActions([]);

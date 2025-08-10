@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { LoginRequest, SignInRequest } from "@/interfaces/auth";
-import { loginUser, signUpUser } from "@/utils/auth";
+import { loginUser } from "@/utils/auth";
 import Button from "@/components/common/Button";
+import { useSignupDraft } from "@/context/SignupDraftContext";
 
 interface AuthFormProps {
     mode: "login" | "signup";
 }
 
 export default function AuthForm({ mode }: AuthFormProps) {
+    const { setDraft } = useSignupDraft();
     const [form, setForm] = useState<Partial<LoginRequest & SignInRequest>>({});
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -36,30 +38,21 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     password: form.password!,
                 };
                 const res = await loginUser(loginData);
-                // Debug logs (can remove later)
-                console.log("ACCESS TOKEN:", res.access);
-                console.log("REFRESH TOKEN:", res.refresh);
                 localStorage.setItem("access", res.access);
                 localStorage.setItem("refresh", res.refresh);
-            } else {
-                const signUpData: SignInRequest = {
-                    username: form.username!,
-                    email: form.email!,
-                    password: form.password!,
-                    first_name: form.first_name || "",
-                    last_name: form.last_name || "",
-                    avatar: null,
-                    bio: "",
-                    phone_number: "",
-                    date_of_birth: "2000-01-01",
-                    gender: "prefer_not_say",
-                    profile_complete: true,
-                    city: null,
-                };
-                await signUpUser(signUpData);
+                router.push("/home");
+                return;
             }
 
-            router.push("/profile");
+            // SIGNUP (step 1) — stash essentials and go to onboarding
+            const draft = {
+                username: form.username!,
+                email: form.email!,
+                password: form.password!,
+            };
+            setDraft(draft);
+            router.push("/onboarding");
+            return;
         } catch (err) {
             setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
         } finally {
@@ -67,9 +60,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
         }
     };
 
+    const isSignup = mode === "signup";
+
     return (
         <form onSubmit={handleSubmit} className="space-y-2 animate-[fadeIn_.3s_ease]">
-            {mode === "signup" && (
+            {isSignup && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">
@@ -102,7 +97,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                             className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-green-400"
                             onChange={handleChange}
                             autoComplete="username"
-                            required={mode === "signup"}
+                            required={isSignup}
                         />
                     </div>
                 </div>
@@ -125,8 +120,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     <label className="block text-sm font-medium text-gray-700">
                         Password
                     </label>
-                    {/* helper spot */}
-                    {mode === "signup" && (
+                    {isSignup && (
                         <span className="text-xs text-gray-500">
                             Min 6 characters recommended
                         </span>
@@ -160,15 +154,15 @@ export default function AuthForm({ mode }: AuthFormProps) {
             )}
 
             <Button type="submit" fullWidth disabled={loading}>
-                {loading ? "Processing..." : mode === "login" ? "Login" : "Create account"}
+                {loading ? "Processing..." : mode === "login" ? "Login" : "Continue"}
             </Button>
 
             <style jsx global>{`
-            @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        `}</style>
+			@keyframes fadeIn {
+				from { opacity: 0; transform: translateY(4px); }
+				to { opacity: 1; transform: translateY(0); }
+			}
+			`}</style>
         </form>
     );
 }

@@ -3,13 +3,13 @@
 import { ReactNode } from "react";
 
 const iconForType = (t: string): ReactNode => {
-    const key = t.toLowerCase();
-    if (key.includes("recycle")) return "♻️";
-    if (key.includes("plant")) return "🌱";
+    const key = (t || "").toLowerCase();
+    if (key.includes("recycle") || key.includes("plastic")) return "♻️";
+    if (key.includes("plant") || key.includes("vegetarian")) return "🌱";
     if (key.includes("energy")) return "⚡";
     if (key.includes("water")) return "💧";
     if (key.includes("transport")) return "🚲";
-    return "♻️";
+    return "🌍";
 };
 
 export const ActionCard = ({
