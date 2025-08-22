@@ -49,6 +49,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 username: form.username!,
                 email: form.email!,
                 password: form.password!,
+                first_name: form.first_name ?? "",
+                last_name: form.last_name ?? "",
             };
             setDraft(draft);
             router.push("/onboarding");

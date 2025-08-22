@@ -5,20 +5,32 @@ import { useEffect } from "react";
 
 export default function HomePage() {
 	const router = useRouter();
+    type GlowButton = HTMLButtonElement & { _listener?: (e: MouseEvent) => void };
 
 	useEffect(() => {
 		if (typeof window === "undefined") return;
 		const buttons =
-			document.querySelectorAll<HTMLButtonElement>(".glow-button");
+            document.querySelectorAll<GlowButton>(".glow-button");
+
+        const handleMouseMove = (e: MouseEvent, btn: GlowButton) => {
+            const rect = btn.getBoundingClientRect();
+            btn.style.setProperty("--x", `${e.clientX - rect.left}px`);
+            btn.style.setProperty("--y", `${e.clientY - rect.top}px`);
+        };
+
 		buttons.forEach((btn) => {
-			btn.addEventListener("mousemove", (e) => {
-				const rect = btn.getBoundingClientRect();
-				btn.style.setProperty("--x", `${e.clientX - rect.left}px`);
-				btn.style.setProperty("--y", `${e.clientY - rect.top}px`);
-			});
+            const listener = (e: MouseEvent) => handleMouseMove(e, btn);
+			btn.addEventListener("mousemove", listener);
+            btn._listener = listener;
 		});
-		return () => buttons.forEach((btn) => btn.replaceWith(btn.cloneNode(true)));
-	}, []);
+        return () => {
+            buttons.forEach((btn) => {
+                if (btn._listener) {
+                    btn.removeEventListener("mousemove", btn._listener);
+                }
+            });
+        };
+    }, []);
 
 	return (
 		<div
@@ -54,6 +66,16 @@ export default function HomePage() {
 					Sign Up
 				</button>
 			</div>
+
+            {/* Skip to Home */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+                <button
+                    onClick={() => router.push("/home")}
+                    className="text-white/90 hover:text-white underline text-sm"
+                >
+                    Skip to homepage →
+                </button>
+            </div>
 
 			<style jsx>{`
 				.polluted-text {

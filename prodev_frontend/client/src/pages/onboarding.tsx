@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { useSignupDraft } from "@/context/SignupDraftContext";
-import { signUpUser } from "@/utils/auth";
-import type { SignInRequest } from "@/interfaces/auth";
+import { loginUser, signUpUser } from "@/utils/auth";
+import type { LoginRequest , SignInRequest } from "@/interfaces/auth";
 import { stripEmpty } from "@/utils/sanitize";
 import { ApiError } from "@/utils/http";
 import Button from "@/components/common/Button";
@@ -84,8 +84,8 @@ export default function OnboardingPage() {
             username: draft.username!,
             email: draft.email!,
             password: draft.password!,
-            first_name: form.first_name,
-            last_name: form.last_name,
+            first_name: draft?.first_name || "",
+            last_name: draft?.last_name || "",
             avatar: form.avatar ? form.avatar : null,
             bio: form.bio,
             phone_number: form.phone_number,
@@ -108,6 +108,17 @@ export default function OnboardingPage() {
         setFieldErrors({});
         try {
             await signUpUser(combinedPayload as SignInRequest);
+
+            const loginData: LoginRequest = {
+                email: combinedPayload.email!,
+                password: combinedPayload.password!,
+            };
+
+            const res = await loginUser(loginData);
+
+            localStorage.setItem("access", res.access);
+            localStorage.setItem("refresh", res.refresh);
+
             setDraft(null);
             router.replace("/home");
         } catch (e) {

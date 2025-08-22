@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import AuthForm from "@/components/auth/AuthForm";
 import BackButton from "@/components/common/BackButton";
 import Button from "@/components/common/Button";
+import { useRouter } from "next/router";
 
 export default function AuthPage() {
     const [mode, setMode] = useState<"login" | "signup">("login");
+    const router = useRouter();
 
     // read ?mode= from query so /auth?mode=signup opens on signup
     useEffect(() => {
@@ -37,7 +39,7 @@ export default function AuthPage() {
             >
                 <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
                 <div className="absolute top-4 left-4">
-                    <BackButton />
+                    <BackButton onClick={() => router.push("/")} />
                 </div>
                 <div className="absolute bottom-8 left-8 text-white max-w-sm">
                     <h2 className="text-3xl font-bold drop-shadow-md">
@@ -52,7 +54,7 @@ export default function AuthPage() {
             {/* Right: form */}
             <div className="relative flex items-center justify-center p-6 sm:p-8">
                 <div className="absolute top-4 left-4 md:hidden">
-                    <BackButton />
+                    <BackButton onClick={() => router.push("/")} />
                 </div>
 
                 <div className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl rounded-2xl p-6 sm:p-8">

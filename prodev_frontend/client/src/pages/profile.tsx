@@ -141,7 +141,7 @@ export default function ProfilePage() {
                         </Button>
                     </div>
                     <div className="mt-3 text-xs text-gray-500">
-                        Need an account? <Link href="/signup" className="text-emerald-700 hover:underline">Sign up</Link>
+                        Need an account? <Link href="/auth?mode=signup" className="text-emerald-700 hover:underline">Sign up</Link>
                     </div>
                 </div>
             </div>
@@ -164,7 +164,7 @@ export default function ProfilePage() {
             {/* Header */}
             <header className="sticky top-0 z-20">
                 <div className="flex items-center justify-between px-6 py-4">
-                    <BackButton className="text-white" />
+                    <BackButton onClick={() => router.push("/home")} className="text-white" />
                     <div className="w-12" />
                     <Link href="/home" className="font-semibold tracking-tight text-lg hover:opacity-80 transition">
                         <span className="text-green-600 dark:text-green-400">Carbon</span>Jar

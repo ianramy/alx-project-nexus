@@ -78,6 +78,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const login = useCallback(async (credentials: LoginRequest) => {
         const res: LoginResponse = await apiLogin(credentials);
+        localStorage.setItem("access", res.access);
+        localStorage.setItem("refresh", res.refresh);
         setAccessToken(res.access);
         await loadMe();
     }, [loadMe]);
@@ -88,6 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } finally {
             setUser(null);
             setAccessToken(null);
+            clearTokens();
         }
     }, []);
 
